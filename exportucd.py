@@ -19,11 +19,19 @@ from bpy_extras.io_utils import ExportHelper
 
 
 def do_export(context, exporter, props, filepath):
-		if len(bpy.data.meshes) != 1:
-			exporter.report({'ERROR'}, "Scene must contain exactly one mesh. Aborting export.")
-			return False
+		mesh = None
 		
-		mesh = bpy.data.meshes[0];
+		for selected_object in bpy.context.selected_objects:
+			if selected_object.type == 'Mesh':
+				if mesh != None:
+					exporter.report({'ERROR'}, "More than one mesh selected. Aborting export.")
+					return False
+				else:
+					mesh = selected_object
+		
+		if mesh == None:
+			exporter.report({'ERROR'}, "No mesh selected in 'Object Mode'. Aborting export.")
+			return False
 		
 		out = open(filepath, "w")
 		
@@ -64,18 +72,12 @@ def do_export(context, exporter, props, filepath):
 				return False
 			
 		
-		'''
-		Use vertex groups to assign colors to boundary edges. If both vertices belong 
-		to the same group that group index (+ 1) is the edge color. Vertices without 
-		a vertex group have color 0.
-		'''
 		boundary_edge_colors = [ ]
 		
 		for edge in boundary_edges:
 			v1 = edge[0]
 			v2 = edge[1]
 			
-			# Gather list of group ids
 			v1_groups = [ ]
 			v2_groups = [ ]
 			
@@ -85,7 +87,6 @@ def do_export(context, exporter, props, filepath):
 			for group in vertices[v2].groups:
 				v2_groups.append(group.group)
 			
-			# Calculate intersection of group lists
 			common_groups = list(set(v1_groups) & set(v2_groups))
 			
 			if len(common_groups) > 1:
@@ -160,7 +161,7 @@ class Export_ucd(bpy.types.Operator, ExportHelper):
 		
 		@classmethod
 		def poll(cls, context):
-				return context.active_object.type in {'MESH', 'CURVE', 'SURFACE', 'FONT'}
+				return context.active_object.type in {'MESH'}
 
 		def execute(self, context):
 				start_time = time.time()
