@@ -22,7 +22,7 @@ def do_export(context, exporter, props, filepath):
 		mesh = None
 		
 		for selected_object in bpy.context.selected_objects:
-			if selected_object.type == 'Mesh':
+			if selected_object.type.lower() == 'mesh':
 				if mesh != None:
 					exporter.report({'ERROR'}, "More than one mesh selected. Aborting export.")
 					return False
@@ -35,8 +35,8 @@ def do_export(context, exporter, props, filepath):
 		
 		out = open(filepath, "w")
 		
-		vertices = mesh.vertices
-		quads = mesh.polygons;
+		vertices = mesh.data.vertices
+		quads = mesh.data.polygons;
 		
 		'''
 		First line of the .inp file requires us to know the number of boundary edges. As a
